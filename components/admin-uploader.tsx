@@ -15,6 +15,15 @@ type LibraryResponse = {
   error?: string;
 };
 
+type BlobUploadEvent = {
+  type: "blob.generate-presigned-url";
+  payload: {
+    pathname: string;
+    multipart: boolean;
+    clientPayload: string;
+  };
+};
+
 type AdminUploaderProps = {
   library: ModelLibrary;
   directBlobUpload: boolean;
@@ -106,15 +115,26 @@ export function AdminUploader({
   }
 
   async function uploadDirectlyToBlob(selectedFile: File) {
-    const id = `${Date.now()}`;
+    const id = `${selectedFile.lastModified}-${selectedFile.size}`;
     const pathname = `uploads/model-${id}-${safeFileName(selectedFile.name)}`;
+    const clientPayload = JSON.stringify({ id, fileName: selectedFile.name, password });
+    const multipart = false;
+
+    await assertBlobUploadRouteReady({
+      type: "blob.generate-presigned-url",
+      payload: {
+        pathname,
+        multipart,
+        clientPayload,
+      },
+    });
 
     const blob = await uploadPresigned(pathname, selectedFile, {
       access: "private",
       handleUploadUrl: "/api/admin/blob-upload",
-      clientPayload: JSON.stringify({ id, fileName: selectedFile.name, password }),
+      clientPayload,
       contentType: "application/octet-stream",
-      multipart: false,
+      multipart,
       onUploadProgress: (event) => setUploadProgress(event.percentage),
     });
 
@@ -130,6 +150,19 @@ export function AdminUploader({
     }
 
     onLibraryChange?.(data.library ?? (await fetchLatestLibrary()));
+  }
+
+  async function assertBlobUploadRouteReady(event: BlobUploadEvent) {
+    const response = await fetch("/api/admin/blob-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(event),
+    });
+    const data = await readJsonResponse<{ error?: string }>(response, "无法生成 Blob 上传地址。");
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error ?? "无法生成 Blob 上传地址。");
+    }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
