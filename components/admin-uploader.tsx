@@ -110,7 +110,7 @@ export function AdminUploader({
     const pathname = `uploads/model-${id}-${safeFileName(selectedFile.name)}`;
 
     const blob = await uploadPresigned(pathname, selectedFile, {
-      access: "public",
+      access: "private",
       handleUploadUrl: "/api/admin/blob-upload",
       clientPayload: JSON.stringify({ id, fileName: selectedFile.name, password }),
       contentType: "application/octet-stream",

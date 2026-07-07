@@ -17,7 +17,7 @@ export function ViewerCanvas({ model }: { model: StoredModel | null }) {
     let disposed = false;
     let cleanup: (() => void) | undefined;
     const host = hostRef.current;
-    const modelUrl = model.url;
+    const modelUrl = model.url.includes(".blob.vercel-storage.com") ? `/api/model/file/${model.id}` : model.url;
     host.innerHTML = "";
     setError(null);
     setMessage("正在加载 IFC 模型...");

@@ -13,8 +13,8 @@ type UploadPayload = {
   password: string;
 };
 
-type PublicIssueSignedTokenOptions = Parameters<typeof issueSignedToken>[0] & {
-  access: "public";
+type PrivateIssueSignedTokenOptions = Parameters<typeof issueSignedToken>[0] & {
+  access: "private";
 };
 
 function checkPassword(password: unknown) {
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
           throw new Error("上传路径不合法。");
         }
 
-        const tokenOptions: PublicIssueSignedTokenOptions = {
-          access: "public",
+        const tokenOptions: PrivateIssueSignedTokenOptions = {
+          access: "private",
           allowedContentTypes: ["application/octet-stream"],
           maximumSizeInBytes: maxUploadSize,
           operations: ["put"],
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         return {
           token: await issueSignedToken(tokenOptions),
           urlOptions: {
-            access: "public",
+            access: "private",
             addRandomSuffix: false,
             allowOverwrite: true,
             contentType: "application/octet-stream",
