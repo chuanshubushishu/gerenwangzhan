@@ -114,7 +114,7 @@ export function AdminUploader({
       handleUploadUrl: "/api/admin/blob-upload",
       clientPayload: JSON.stringify({ id, fileName: selectedFile.name, password }),
       contentType: "application/octet-stream",
-      multipart: selectedFile.size > 4 * 1024 * 1024,
+      multipart: false,
       onUploadProgress: (event) => setUploadProgress(event.percentage),
     });
 
