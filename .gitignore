@@ -1,0 +1,15 @@
+.next/
+node_modules/
+.playwright-browsers/
+tsconfig.tsbuildinfo
+
+.env
+.env*.local
+.vercel/
+
+data/*.json
+public/uploads/*
+
+!data/.gitkeep
+!public/uploads/.gitkeep
+!.env.example
