@@ -19,6 +19,7 @@ type AdminUploaderProps = {
   library: ModelLibrary;
   directBlobUpload: boolean;
   requiresBlobStorage: boolean;
+  isVercelDeployment: boolean;
   compact?: boolean;
   title?: string;
   description?: string;
@@ -28,6 +29,8 @@ type AdminUploaderProps = {
 const maxUploadSize = 200 * 1024 * 1024;
 const blobSetupMessage =
   "线上 Vercel 上传需要先配置 Vercel Blob。请在 Vercel 项目里创建并连接 Blob Store，然后重新部署；否则大文件会被 Vercel 拦截。";
+const blobDirectUploadMessage =
+  "Vercel 线上直传失败。请确认 Blob Store 已连接到当前项目，并且 BLOB_STORE_ID、BLOB_WEBHOOK_PUBLIC_KEY 环境变量已在最新 Production 部署中生效。";
 
 function safeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+$/g, "") || "model.ifc";
@@ -62,6 +65,7 @@ export function AdminUploader({
   library,
   directBlobUpload,
   requiresBlobStorage,
+  isVercelDeployment,
   compact = false,
   title = "上传 IFC 模型",
   description = "选择从 Revit 导出的 .ifc 文件，网站会保存到模型库中。每次上传都会新增一个模型，不会覆盖旧模型。",
@@ -166,7 +170,8 @@ export function AdminUploader({
         try {
           await uploadDirectlyToBlob(file);
         } catch (directUploadError) {
-          if (requiresBlobStorage) {
+          if (isVercelDeployment || requiresBlobStorage) {
+            setMessage(null);
             throw directUploadError;
           }
 
@@ -182,7 +187,8 @@ export function AdminUploader({
       setUploadProgress(100);
       setMessage("IFC 模型已上传，并已加入模型库。");
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "上传失败。");
+      const message = uploadError instanceof Error ? uploadError.message : "上传失败。";
+      setError(isVercelDeployment && directBlobUpload ? `${blobDirectUploadMessage} 原始错误：${message}` : message);
     } finally {
       setIsUploading(false);
     }

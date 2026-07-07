@@ -9,10 +9,12 @@ export function PublicModelExperience({
   initialLibrary,
   directBlobUpload,
   requiresBlobStorage,
+  isVercelDeployment,
 }: {
   initialLibrary: ModelLibrary;
   directBlobUpload: boolean;
   requiresBlobStorage: boolean;
+  isVercelDeployment: boolean;
 }) {
   const [library, setLibrary] = useState<ModelLibrary>(initialLibrary);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(initialLibrary.activeModelId);
@@ -52,6 +54,7 @@ export function PublicModelExperience({
           library={library}
           directBlobUpload={directBlobUpload}
           requiresBlobStorage={requiresBlobStorage}
+          isVercelDeployment={isVercelDeployment}
           compact
           title="直接上传 IFC"
           description="把 Revit 模型导出为 .ifc 后，在这里上传即可加入模型库。"

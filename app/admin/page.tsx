@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const library = await getModelLibrary();
   const directBlobUpload = isBlobStorageConfigured();
-  const requiresBlobStorage = isVercelDeployment() && !directBlobUpload;
+  const isRunningOnVercel = isVercelDeployment();
+  const requiresBlobStorage = isRunningOnVercel && !directBlobUpload;
 
   return (
     <main className="app-shell">
@@ -29,6 +30,7 @@ export default async function AdminPage() {
         initialLibrary={library}
         directBlobUpload={directBlobUpload}
         requiresBlobStorage={requiresBlobStorage}
+        isVercelDeployment={isRunningOnVercel}
       />
     </main>
   );

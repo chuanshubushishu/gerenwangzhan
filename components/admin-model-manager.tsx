@@ -13,10 +13,12 @@ export function AdminModelManager({
   initialLibrary,
   directBlobUpload,
   requiresBlobStorage,
+  isVercelDeployment,
 }: {
   initialLibrary: ModelLibrary;
   directBlobUpload: boolean;
   requiresBlobStorage: boolean;
+  isVercelDeployment: boolean;
 }) {
   const [library, setLibrary] = useState<ModelLibrary>(initialLibrary);
   const [password, setPassword] = useState("");
@@ -75,6 +77,7 @@ export function AdminModelManager({
         library={library}
         directBlobUpload={directBlobUpload}
         requiresBlobStorage={requiresBlobStorage}
+        isVercelDeployment={isVercelDeployment}
         onLibraryChange={setLibrary}
       />
 
