@@ -65,6 +65,7 @@ export async function POST(request: Request) {
             pathname,
           }),
           urlOptions: {
+            access: "public",
             addRandomSuffix: false,
             allowOverwrite: true,
             contentType: "application/octet-stream",
