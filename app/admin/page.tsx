@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { AdminModelManager } from "@/components/admin-model-manager";
-import { getModelLibrary, isBlobStorageConfigured } from "@/lib/model-store";
+import { getModelLibrary, isBlobStorageConfigured, isVercelDeployment } from "@/lib/model-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const library = await getModelLibrary();
   const directBlobUpload = isBlobStorageConfigured();
+  const requiresBlobStorage = isVercelDeployment() && !directBlobUpload;
 
   return (
     <main className="app-shell">
@@ -24,7 +25,11 @@ export default async function AdminPage() {
         </nav>
       </header>
 
-      <AdminModelManager initialLibrary={library} directBlobUpload={directBlobUpload} />
+      <AdminModelManager
+        initialLibrary={library}
+        directBlobUpload={directBlobUpload}
+        requiresBlobStorage={requiresBlobStorage}
+      />
     </main>
   );
 }

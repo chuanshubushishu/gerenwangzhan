@@ -8,9 +8,11 @@ import type { ModelLibrary, StoredModel } from "@/lib/model-store";
 export function PublicModelExperience({
   initialLibrary,
   directBlobUpload,
+  requiresBlobStorage,
 }: {
   initialLibrary: ModelLibrary;
   directBlobUpload: boolean;
+  requiresBlobStorage: boolean;
 }) {
   const [library, setLibrary] = useState<ModelLibrary>(initialLibrary);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(initialLibrary.activeModelId);
@@ -49,6 +51,7 @@ export function PublicModelExperience({
         <AdminUploader
           library={library}
           directBlobUpload={directBlobUpload}
+          requiresBlobStorage={requiresBlobStorage}
           compact
           title="直接上传 IFC"
           description="把 Revit 模型导出为 .ifc 后，在这里上传即可加入模型库。"

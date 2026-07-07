@@ -36,6 +36,10 @@ export function isBlobStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
+export function isVercelDeployment() {
+  return Boolean(process.env.VERCEL);
+}
+
 export function withStatusLabel(model: Omit<StoredModel, "statusLabel"> | StoredModel): StoredModel {
   return {
     ...model,

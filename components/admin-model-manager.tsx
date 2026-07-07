@@ -12,9 +12,11 @@ type ActionResponse = {
 export function AdminModelManager({
   initialLibrary,
   directBlobUpload,
+  requiresBlobStorage,
 }: {
   initialLibrary: ModelLibrary;
   directBlobUpload: boolean;
+  requiresBlobStorage: boolean;
 }) {
   const [library, setLibrary] = useState<ModelLibrary>(initialLibrary);
   const [password, setPassword] = useState("");
@@ -69,7 +71,12 @@ export function AdminModelManager({
 
   return (
     <section className="admin-page">
-      <AdminUploader library={library} directBlobUpload={directBlobUpload} onLibraryChange={setLibrary} />
+      <AdminUploader
+        library={library}
+        directBlobUpload={directBlobUpload}
+        requiresBlobStorage={requiresBlobStorage}
+        onLibraryChange={setLibrary}
+      />
 
       <aside className="form-panel">
         <h2>模型管理</h2>

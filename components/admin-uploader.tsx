@@ -18,6 +18,7 @@ type LibraryResponse = {
 type AdminUploaderProps = {
   library: ModelLibrary;
   directBlobUpload: boolean;
+  requiresBlobStorage: boolean;
   compact?: boolean;
   title?: string;
   description?: string;
@@ -25,6 +26,8 @@ type AdminUploaderProps = {
 };
 
 const maxUploadSize = 200 * 1024 * 1024;
+const blobSetupMessage =
+  "线上 Vercel 上传需要先配置 Vercel Blob。请在 Vercel 项目里创建并连接 Blob Store，然后重新部署；否则大文件会被 Vercel 拦截。";
 
 function safeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+$/g, "") || "model.ifc";
@@ -32,7 +35,7 @@ function safeFileName(fileName: string) {
 
 async function fetchLatestLibrary() {
   const response = await fetch("/api/admin/models");
-  const data = (await response.json()) as LibraryResponse;
+  const data = await readJsonResponse<LibraryResponse>(response, "无法刷新模型库。");
 
   if (!response.ok || data.error || !data.library) {
     throw new Error(data.error ?? "无法刷新模型库。");
@@ -41,9 +44,24 @@ async function fetchLatestLibrary() {
   return data.library;
 }
 
+async function readJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    if (response.status === 413 || text.toLowerCase().includes("request entity too large")) {
+      throw new Error(blobSetupMessage);
+    }
+
+    throw new Error(text.trim() || fallbackMessage);
+  }
+}
+
 export function AdminUploader({
   library,
   directBlobUpload,
+  requiresBlobStorage,
   compact = false,
   title = "上传 IFC 模型",
   description = "选择从 Revit 导出的 .ifc 文件，网站会保存到模型库中。每次上传都会新增一个模型，不会覆盖旧模型。",
@@ -72,7 +90,7 @@ export function AdminUploader({
       method: "POST",
       body,
     });
-    const data = (await response.json()) as UploadResponse;
+    const data = await readJsonResponse<UploadResponse>(response, "上传失败。");
 
     if (!response.ok || data.error) {
       throw new Error(data.error ?? "上传失败。");
@@ -101,7 +119,7 @@ export function AdminUploader({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, fileName: selectedFile.name, url: blob.url, password }),
     });
-    const data = (await response.json()) as UploadResponse;
+    const data = await readJsonResponse<UploadResponse>(response, "登记模型失败。");
 
     if (!response.ok || data.error) {
       throw new Error(data.error ?? "模型文件已上传，但登记到模型库失败。");
@@ -136,13 +154,22 @@ export function AdminUploader({
       return;
     }
 
+    if (requiresBlobStorage) {
+      setError(blobSetupMessage);
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       if (directBlobUpload) {
         try {
           await uploadDirectlyToBlob(file);
-        } catch {
+        } catch (directUploadError) {
+          if (requiresBlobStorage) {
+            throw directUploadError;
+          }
+
           setMessage("直传通道失败，正在改用服务器中转上传...");
           setUploadProgress(35);
           await uploadThroughServer(file);
@@ -168,6 +195,7 @@ export function AdminUploader({
     <section className={compact ? "form-panel inline-upload-panel" : "form-panel"}>
       <h1>{title}</h1>
       <p>{description}</p>
+      {requiresBlobStorage ? <div className="message error">{blobSetupMessage}</div> : null}
 
       <form onSubmit={onSubmit}>
         <div className="field">
