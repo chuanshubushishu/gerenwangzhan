@@ -13,6 +13,10 @@ type UploadPayload = {
   password: string;
 };
 
+type PublicIssueSignedTokenOptions = Parameters<typeof issueSignedToken>[0] & {
+  access: "public";
+};
+
 function checkPassword(password: unknown) {
   const expected = process.env.ADMIN_PASSWORD;
   if (!expected) {
@@ -57,13 +61,16 @@ export async function POST(request: Request) {
           throw new Error("上传路径不合法。");
         }
 
+        const tokenOptions: PublicIssueSignedTokenOptions = {
+          access: "public",
+          allowedContentTypes: ["application/octet-stream"],
+          maximumSizeInBytes: maxUploadSize,
+          operations: ["put"],
+          pathname,
+        };
+
         return {
-          token: await issueSignedToken({
-            allowedContentTypes: ["application/octet-stream"],
-            maximumSizeInBytes: maxUploadSize,
-            operations: ["put"],
-            pathname,
-          }),
+          token: await issueSignedToken(tokenOptions),
           urlOptions: {
             access: "public",
             addRandomSuffix: false,
