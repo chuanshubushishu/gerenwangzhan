@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import { FormEvent, useMemo, useState } from "react";
 import type { ModelLibrary, StoredModel } from "@/lib/model-store";
 
@@ -109,7 +109,7 @@ export function AdminUploader({
     const id = `${Date.now()}`;
     const pathname = `uploads/model-${id}-${safeFileName(selectedFile.name)}`;
 
-    const blob = await upload(pathname, selectedFile, {
+    const blob = await uploadPresigned(pathname, selectedFile, {
       access: "public",
       handleUploadUrl: "/api/admin/blob-upload",
       clientPayload: JSON.stringify({ id, fileName: selectedFile.name, password }),

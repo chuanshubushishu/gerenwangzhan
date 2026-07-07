@@ -1,4 +1,5 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { issueSignedToken } from "@vercel/blob";
+import { handleUploadPresigned, type HandleUploadPresignedBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { addModel, withStatusLabel } from "@/lib/model-store";
 
@@ -44,12 +45,12 @@ function parsePayload(clientPayload: string | null): UploadPayload {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as HandleUploadBody;
+    const body = (await request.json()) as HandleUploadPresignedBody;
 
-    const jsonResponse = await handleUpload({
+    const jsonResponse = await handleUploadPresigned({
       body,
       request,
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
+      getSignedToken: async (pathname, clientPayload) => {
         const payload = parsePayload(clientPayload);
 
         if (!pathname.startsWith(`uploads/model-${payload.id}-`) || !pathname.toLowerCase().endsWith(".ifc")) {
@@ -57,10 +58,18 @@ export async function POST(request: Request) {
         }
 
         return {
-          maximumSizeInBytes: maxUploadSize,
-          addRandomSuffix: false,
-          allowOverwrite: true,
-          tokenPayload: JSON.stringify({ id: payload.id, fileName: payload.fileName }),
+          token: await issueSignedToken({
+            allowedContentTypes: ["application/octet-stream"],
+            maximumSizeInBytes: maxUploadSize,
+            operations: ["put"],
+            pathname,
+          }),
+          urlOptions: {
+            addRandomSuffix: false,
+            allowOverwrite: true,
+            contentType: "application/octet-stream",
+            tokenPayload: JSON.stringify({ id: payload.id, fileName: payload.fileName }),
+          },
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
